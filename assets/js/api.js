@@ -24,7 +24,9 @@
       vendasAte: r.vendas_ate,
       premio: r.premio,
       numeroSorteado: r.numero_sorteado,
+      ...(r.gestacao_dias != null ? { gestacaoDataRef: r.gestacao_data_ref, gestacaoDias: r.gestacao_dias } : {}),
     });
+    const mapPost = (r) => ({ id: r.id, data: r.data, titulo: r.titulo, texto: r.texto, foto: r.foto_url, fotoPath: r.foto_path });
 
     return {
       modo: "supabase",
@@ -37,6 +39,31 @@
         const { data, error } = await sb.rpc("numeros_ocupados");
         erro(error);
         return data;
+      },
+      async getDiario() {
+        const { data, error } = await sb.from("diario").select("*").order("data", { ascending: false });
+        if (error) return CFG.diario; // tabela ainda não criada → usa o config.js
+        return data.map(mapPost);
+      },
+      async salvarPost(p, arquivo) {
+        let foto_url = p.foto || null, foto_path = p.fotoPath || null;
+        if (arquivo) {
+          const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.jpg`;
+          const up = await sb.storage.from("diario").upload(path, arquivo, { contentType: "image/jpeg", upsert: false });
+          erro(up.error);
+          if (foto_path) await sb.storage.from("diario").remove([foto_path]);
+          foto_path = path;
+          foto_url = sb.storage.from("diario").getPublicUrl(path).data.publicUrl;
+        }
+        const linha = { data: p.data, titulo: p.titulo, texto: p.texto || null, foto_url, foto_path };
+        const q = p.id ? sb.from("diario").update(linha).eq("id", p.id) : sb.from("diario").insert(linha);
+        const { error } = await q;
+        erro(error);
+      },
+      async removerPost(p) {
+        const { error } = await sb.from("diario").delete().eq("id", p.id);
+        erro(error);
+        if (p.fotoPath) await sb.storage.from("diario").remove([p.fotoPath]);
       },
       async getMural() {
         const { data, error } = await sb.rpc("mural_mensagens");
@@ -105,6 +132,7 @@
             vendas_ate: c.vendasAte,
             premio: c.premio,
             numero_sorteado: c.numeroSorteado,
+            ...(c.gestacaoDias != null ? { gestacao_data_ref: c.gestacaoDataRef, gestacao_dias: c.gestacaoDias } : {}),
             atualizado_em: new Date().toISOString(),
           })
           .eq("id", 1);
@@ -131,6 +159,7 @@
       });
       return {
         config: { ...CFG.rifa },
+        diario: CFG.diario.map((p) => ({ ...p, id: crypto.randomUUID() })),
         participantes: [
           seed(7, "Exemplo Avó", "pago", CFG.familia.bebe + ", a vovó já te ama demais! (mensagem de demonstração)", 30),
           seed(21, "Exemplo Tio", "pago", "", 20),
@@ -154,6 +183,18 @@
           .map((p) => ({ numero: p.numero, status: p.status, primeiro_nome: primeiroNome(p.nome) }))
           .sort((a, b) => a.numero - b.numero);
       },
+      async getDiario() {
+        await espera();
+        if (!estado.diario) estado.diario = CFG.diario.map((p) => ({ ...p, id: crypto.randomUUID() }));
+        return [...estado.diario].sort((a, b) => String(b.data).localeCompare(String(a.data)));
+      },
+      async salvarPost(p, arquivo) {
+        const foto = arquivo ? await new Promise((r) => { const fr = new FileReader(); fr.onload = () => r(fr.result); fr.readAsDataURL(arquivo); }) : p.foto || null;
+        const novo = { id: p.id || crypto.randomUUID(), data: p.data, titulo: p.titulo, texto: p.texto, foto };
+        estado.diario = (estado.diario || []).filter((x) => x.id !== novo.id).concat(novo);
+        salvar(estado);
+      },
+      async removerPost(p) { estado.diario = estado.diario.filter((x) => x.id !== p.id); salvar(estado); },
       async getMural() {
         await espera();
         const vistos = new Set();
@@ -262,12 +303,25 @@ window.RifaUtil = {
   linkWhatsApp(cel, texto) {
     return `https://wa.me/${RifaUtil.celularBR(cel)}?text=${encodeURIComponent(texto)}`;
   },
+  /* Os valores do banco (painel) têm prioridade sobre o config.js */
+  aplicarGestacao(cfg) {
+    if (cfg && cfg.gestacaoDias != null && cfg.gestacaoDataRef) {
+      window.RIFA_CONFIG.gestacao = { dataReferencia: String(cfg.gestacaoDataRef).slice(0, 10), diasNaReferencia: cfg.gestacaoDias };
+    }
+  },
+  /* dias de gestação numa data qualquer */
+  diasGestacao(data) {
+    const g = window.RIFA_CONFIG.gestacao;
+    const base = g.diasNaReferencia ?? g.semanasNaReferencia * 7;
+    return base + Math.floor((RifaUtil.dia(data).getTime() - RifaUtil.dia(g.dataReferencia).getTime()) / 86400e3);
+  },
   gestacao() {
     const g = window.RIFA_CONFIG.gestacao;
     const ref = RifaUtil.dia(g.dataReferencia);
+    const base = g.diasNaReferencia ?? g.semanasNaReferencia * 7;
     const diasDesdeRef = Math.floor((Date.now() - ref.getTime()) / 86400e3);
-    const totalDias = Math.max(0, g.semanasNaReferencia * 7 + diasDesdeRef);
-    const dpp = new Date(ref.getTime() + (40 * 7 - g.semanasNaReferencia * 7) * 86400e3);
+    const totalDias = Math.max(0, base + diasDesdeRef);
+    const dpp = new Date(ref.getTime() + (280 - base) * 86400e3);
     return { semanas: Math.floor(totalDias / 7), dias: totalDias % 7, progresso: Math.min(1, totalDias / 280), dpp };
   },
   mensagemLembrete(nome, numeros, cfg) {

@@ -53,8 +53,8 @@ window.RIFA_CONFIG = {
   /* WhatsApp para receber os comprovantes (só números, com 55 + DDD) */
   whatsappContato: "5521995258697",
 
-  /* Gestação: data de referência + semanas naquela data.
-     A semana atual e a data prevista são calculadas sozinhas. */
+  /* Gestação (usado só no modo demo / antes da migração 02).
+     Com o Supabase, edite em: Área dos pais › Configuração › Gestação. */
   gestacao: {
     dataReferencia: "2026-10-18",
     semanasNaReferencia: 21,
@@ -66,15 +66,15 @@ window.RIFA_CONFIG = {
      { data: "2026-12-20", titulo: "Live de Natal", texto: "..." } */
   cronograma: [],
 
-  /* Diário do Matias — para adicionar um momento, coloque a foto na
-     pasta /imagens e acrescente um item aqui (o mais recente primeiro
-     ou em qualquer ordem: o site ordena pela data). */
+  /* Diário — usado só no modo demo / antes da migração 02.
+     Com o Supabase, publique pela Área dos pais › Diário (com foto).
+     {semanas} no texto vira a semana de gestação na data do post. */
   diario: [
     {
       data: "2026-10-18",
       titulo: "Nós três",
       texto:
-        "21 semanas de muito amor. Em vez de chá, decidimos fazer uma rifa — " +
+        "{semanas} semanas de muito amor. Em vez de chá, decidimos fazer uma rifa — " +
         "e queremos que você acompanhe cada passo com a gente até o sorteio.",
       foto: "imagens/familia.jpg",
     },

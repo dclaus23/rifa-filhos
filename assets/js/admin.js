@@ -144,6 +144,12 @@
     f.vendasAte.value = paraInput(config.vendasAte);
     f.premio.value = config.premio ?? "";
     f.numeroSorteado.value = config.numeroSorteado ?? "";
+    const g = U.gestacao();
+    const hoje = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
+    f.gestSemanas.value = g.semanas;
+    f.gestDias.value = g.dias;
+    f.gestData.value = hoje;
+    $("#gest-preview").textContent = `· hoje: ${g.semanas} semanas${g.dias ? " e " + g.dias + " dia" + (g.dias > 1 ? "s" : "") : ""} · chegada prevista ${U.dataLonga(g.dpp)}`;
   }
   $("#form-config").addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -165,10 +171,104 @@
         vendasAte: deInput(f.vendasAte.value),
         premio: f.premio.value.trim() || null,
         numeroSorteado: sorteado,
+        gestacaoDataRef: f.gestData.value,
+        gestacaoDias: Number(f.gestSemanas.value) * 7 + Number(f.gestDias.value || 0),
       });
       toast("Configuração salva!");
       await carregar();
     } catch (err) { $("#cfg-erro").textContent = err.message; }
+  });
+
+  /* ------------------------------ diário ---------------------------- */
+  let posts = [];
+  const fp = $("#form-post");
+  const hojeBR = () => new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
+
+  /* Reduz a foto no navegador (celular gera fotos de 3–8 MB) → JPEG ~1600px */
+  async function prepararFoto(arquivo) {
+    const img = await new Promise((ok, falha) => {
+      const i = new Image();
+      i.onload = () => ok(i);
+      i.onerror = () => falha(new Error("Não consegui ler essa imagem. Tente uma foto JPG ou PNG."));
+      i.src = URL.createObjectURL(arquivo);
+    });
+    const max = 1600, esc = Math.min(1, max / Math.max(img.naturalWidth, img.naturalHeight));
+    const c = document.createElement("canvas");
+    c.width = Math.round(img.naturalWidth * esc);
+    c.height = Math.round(img.naturalHeight * esc);
+    c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+    return new Promise((ok) => c.toBlob(ok, "image/jpeg", 0.82));
+  }
+
+  function limparFormPost() {
+    fp.reset();
+    fp.id.value = "";
+    fp.data.value = hojeBR();
+    $("#post-preview").hidden = true;
+    $("#post-titulo-form").textContent = "Novo momento";
+    $("#post-salvar").textContent = "Publicar no diário";
+    $("#post-cancelar").hidden = true;
+    $("#post-erro").textContent = "";
+  }
+
+  async function renderPosts() {
+    posts = await API.getDiario();
+    if (!fp.data.value) fp.data.value = hojeBR();
+    $("#lista-posts").innerHTML = posts.length ? posts.map((p) => {
+      const sem = Math.floor(U.diasGestacao(p.data) / 7);
+      return `<div class="item-post">
+        ${p.foto ? `<img src="${U.esc(p.foto)}" alt="">` : `<div class="sem-foto">📝</div>`}
+        <div><small class="muted">${U.dataLonga(U.dia(p.data))} · ${sem} semanas</small>
+          <h4>${U.esc(p.titulo)}</h4><p>${U.esc(String(p.texto || "").replace(/\{semanas\}/g, sem))}</p></div>
+        <div class="acoes" style="flex-direction:column">
+          <button class="btn btn-fantasma btn-pequeno" data-editar="${p.id}" type="button">editar</button>
+          <button class="btn btn-link btn-pequeno" data-apagar="${p.id}" type="button">apagar</button>
+        </div></div>`;
+    }).join("") : `<p class="vazio">Nenhum momento ainda. Publique o primeiro ao lado!</p>`;
+  }
+
+  fp.foto.addEventListener("change", () => {
+    const f = fp.foto.files[0];
+    const prev = $("#post-preview");
+    if (f) { prev.src = URL.createObjectURL(f); prev.hidden = false; }
+  });
+  $("#post-cancelar").addEventListener("click", limparFormPost);
+
+  $("#lista-posts").addEventListener("click", async (e) => {
+    const ed = e.target.closest("[data-editar]");
+    const ap = e.target.closest("[data-apagar]");
+    if (ed) {
+      const p = posts.find((x) => String(x.id) === ed.dataset.editar);
+      fp.id.value = p.id; fp.data.value = String(p.data).slice(0, 10); fp.titulo.value = p.titulo; fp.texto.value = p.texto || "";
+      const prev = $("#post-preview");
+      if (p.foto) { prev.src = p.foto; prev.hidden = false; } else prev.hidden = true;
+      $("#post-titulo-form").textContent = "Editando momento";
+      $("#post-salvar").textContent = "Salvar alterações";
+      $("#post-cancelar").hidden = false;
+      fp.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    if (ap) {
+      const p = posts.find((x) => String(x.id) === ap.dataset.apagar);
+      if (!confirm(`Apagar "${p.titulo}" do diário?`)) return;
+      try { await API.removerPost(p); toast("Momento apagado."); renderPosts(); } catch (err) { toast("Erro: " + err.message); }
+    }
+  });
+
+  fp.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const btn = $("#post-salvar"), txt = btn.textContent;
+    $("#post-erro").textContent = "";
+    btn.disabled = true; btn.textContent = "Salvando…";
+    try {
+      const atual = posts.find((x) => String(x.id) === fp.id.value) || {};
+      const arquivo = fp.foto.files[0] ? await prepararFoto(fp.foto.files[0]) : null;
+      await API.salvarPost({ ...atual, id: fp.id.value || null, data: fp.data.value, titulo: fp.titulo.value.trim(), texto: fp.texto.value.trim() }, arquivo);
+      toast(fp.id.value ? "Momento atualizado!" : "Publicado no diário! 📸");
+      limparFormPost();
+      await renderPosts();
+    } catch (err) {
+      $("#post-erro").textContent = err.message;
+    } finally { btn.disabled = false; if (btn.textContent === "Salvando…") btn.textContent = txt; }
   });
 
   /* ------------------------------- CSV ------------------------------ */
@@ -193,7 +293,9 @@
   /* ------------------------- login / carga -------------------------- */
   async function carregar() {
     [config, participantes] = await Promise.all([API.getConfig(), API.listarParticipantes()]);
+    U.aplicarGestacao(config);
     renderCards();
+    renderPosts();
     renderParticipantes();
     renderLembretes();
     preencherConfig();

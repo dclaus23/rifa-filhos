@@ -305,17 +305,19 @@
   }
 
   /* ----------------------------- diário ----------------------------- */
-  function renderDiario() {
-    const ref = U.dia(CFG.gestacao.dataReferencia);
-    const posts = [...CFG.diario].sort((a, b) => U.dia(b.data) - U.dia(a.data));
+  async function renderDiario() {
+    let posts = CFG.diario;
+    try { posts = await API.getDiario(); } catch (_) {}
+    posts = [...posts].sort((a, b) => String(b.data).localeCompare(String(a.data)));
     const html = posts.map((p) => {
-      const sem = CFG.gestacao.semanasNaReferencia + Math.floor((U.dia(p.data) - ref) / (7 * 86400e3));
+      const sem = Math.floor(U.diasGestacao(p.data) / 7);
+      const texto = String(p.texto || "").replace(/\{semanas\}/g, sem);
       return `<article class="post">
         ${p.foto ? `<img src="${U.esc(p.foto)}" alt="${U.esc(p.titulo)}" loading="lazy" />` : ""}
         <div class="post-corpo">
           <div class="post-meta">${U.dataLonga(U.dia(p.data))} · ${sem} semanas</div>
           <h3>${U.esc(p.titulo)}</h3>
-          <p>${U.esc(p.texto || "")}</p>
+          <p>${U.esc(texto)}</p>
         </div></article>`;
     }).join("");
     $("#diario-lista").innerHTML = html + `<div class="post embreve"><div class="icone">📸</div><p>Novas fotos em breve.<br>Ultrassons, barrigão e muito mais.</p></div>`;
@@ -399,6 +401,7 @@
     if (API.modo === "demo") $("#faixa-demo").hidden = false;
     try {
       estado.config = await API.getConfig();
+      U.aplicarGestacao(estado.config);
     } catch (e) {
       toast("Não consegui carregar a rifa. Atualize a página.", 5000);
     }

@@ -1,0 +1,15 @@
+.DS_Store
+
+# Originais das fotos (o site usa as versões otimizadas em fotos/)
+Fotos/
+
+# NUNCA publicar: documentos pessoais e senhas
+*.docx
+*.doc
+*.xlsx
+*.pdf
+~$*
+*senha*
+*Senha*
+DESENVOLVIMENTO.md
+supabase/

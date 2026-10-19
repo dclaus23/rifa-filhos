@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rifa do Matias</title>
+  <meta name="description" content="Em vez de chá, uma rifa! Escolha seu número e acompanhe com a gente a chegada do Matias." />
+  <meta property="og:title" content="Rifa do Matias 💛" />
+  <meta property="og:description" content="Escolha seu número e faça parte da chegada do Matias." />
+  <meta property="og:image" content="imagens/familia.jpg" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍼</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body>
+  <div id="faixa-demo" class="faixa-demo" hidden>Modo demonstração — os cadastros ficam só neste navegador. Configure o Supabase em <code>assets/js/config.js</code>.</div>
+
+  <header class="topo">
+    <a href="#inicio" class="marca" data-tpl="Rifa {do} <em>{bebe}</em>">Rifa do <em>Matias</em></a>
+    <nav class="menu">
+      <a href="#numeros">Números</a>
+      <a href="#cronograma">Cronograma</a>
+      <a href="#diario">Diário</a>
+      <a href="#mural">Mural</a>
+      <a href="admin.html" id="link-pais" class="menu-pais">🔒 <span class="so-desktop">Área dos </span>pais</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ============ HERO ============ -->
+    <section id="inicio" class="hero">
+      <div class="hero-texto">
+        <p class="kicker" data-tpl="{pais} · Rifa Filhos · {ordem} {filho}">David &amp; Vanessa · Rifa Filhos · 1º filho</p>
+        <h1 data-tpl="Em vez de chá,<br /><em>uma rifa</em> {pro} {bebe}.">Em vez de chá,<br /><em>uma rifa</em> pro Matias.</h1>
+        <p class="lead" data-tpl="Estamos esperando {o} noss{o} <strong>{ordinal} {filho}</strong> e decidimos celebrar de um jeito diferente. Cada número ajuda a montar o enxoval e o cantinho {dele}, e você ainda concorre a um prêmio e acompanha com a gente cada passo até a chegada.">
+          Estamos esperando o nosso <strong>primeiro filho</strong> e decidimos celebrar de um jeito diferente.
+        </p>
+
+        <div id="vencedor" class="vencedor" hidden></div>
+
+        <div class="gestacao" aria-label="Progresso da gestação">
+          <div class="gestacao-topo">
+            <span><strong id="gest-semanas">21</strong> semanas <span id="gest-dias"></span></span>
+            <span class="muted">chegada prevista: <span id="gest-dpp"></span></span>
+          </div>
+          <div class="barra"><div class="barra-fill" id="gest-barra"></div><span class="barra-bebe" id="gest-bebe">👶</span></div>
+        </div>
+
+        <div class="hero-acoes">
+          <a href="#numeros" class="btn btn-primario">Escolher meu número</a>
+          <a href="#diario" class="btn btn-fantasma">Acompanhar o diário</a>
+        </div>
+
+        <dl class="stats">
+          <div><dt>Valor por número</dt><dd id="st-valor">—</dd></div>
+          <div><dt>Números escolhidos</dt><dd id="st-vendidos">—</dd></div>
+          <div><dt>Sorteio</dt><dd id="st-sorteio">—</dd></div>
+        </dl>
+      </div>
+
+      <figure class="hero-foto">
+        <img src="imagens/familia.jpg" alt="Os pais abraçados, com as mãos na barriga" data-tpl-alt="{pais} abraçados, com as mãos na barriga onde está {o} {bebe}" />
+        <figcaption data-tpl="{pais} e {o} {bebe} (ainda aqui dentro)">David &amp; Vanessa e o Matias (ainda aqui dentro)</figcaption>
+      </figure>
+    </section>
+
+    <!-- ============ CONTAGEM ============ -->
+    <section class="contagem" id="contagem">
+      <p class="contagem-rotulo">Faltam para o sorteio</p>
+      <div class="contagem-num">
+        <div><span id="cd-d">00</span><small>dias</small></div>
+        <div><span id="cd-h">00</span><small>horas</small></div>
+        <div><span id="cd-m">00</span><small>min</small></div>
+        <div><span id="cd-s">00</span><small>seg</small></div>
+      </div>
+      <p class="contagem-premio" id="premio"></p>
+    </section>
+
+    <!-- ============ COMO FUNCIONA ============ -->
+    <section class="secao como">
+      <h2>Como participar</h2>
+      <ol class="passos">
+        <li><span>1</span><h3>Escolha</h3><p>Toque nos números livres que quiser. Pode escolher mais de um!</p></li>
+        <li><span>2</span><h3>Cadastre</h3><p data-tpl="Seu nome, celular e, se quiser, uma mensagem {pro} {bebe}.">Seu nome, celular e, se quiser, uma mensagem pro Matias.</p></li>
+        <li><span>3</span><h3>Pague no PIX</h3><p>Use o QR Code ou o copia e cola e mande o comprovante pra gente.</p></li>
+        <li><span>4</span><h3>Torça!</h3><p>Na véspera do sorteio você recebe um lembrete no WhatsApp.</p></li>
+      </ol>
+    </section>
+
+    <!-- ============ NÚMEROS ============ -->
+    <section id="numeros" class="secao">
+      <div class="secao-cab">
+        <div>
+          <h2>Escolha seus números</h2>
+          <p class="muted" id="numeros-resumo">Carregando…</p>
+        </div>
+        <div class="filtros">
+          <input type="search" id="busca" inputmode="numeric" placeholder="Buscar nº" aria-label="Buscar número" />
+          <label class="toggle"><input type="checkbox" id="so-livres" /> só livres</label>
+        </div>
+      </div>
+      <div class="legenda">
+        <span><i class="dot livre"></i> livre</span>
+        <span><i class="dot sel"></i> sua escolha</span>
+        <span><i class="dot res"></i> reservado</span>
+        <span><i class="dot pago"></i> confirmado</span>
+      </div>
+      <div id="grade" class="grade" role="group" aria-label="Números da rifa"></div>
+      <p id="vendas-encerradas" class="aviso" hidden></p>
+    </section>
+
+    <!-- ============ CRONOGRAMA ============ -->
+    <section id="cronograma" class="secao">
+      <h2>Cronograma</h2>
+      <p class="muted" id="forma-sorteio"></p>
+      <ol id="linha-tempo" class="linha-tempo"></ol>
+    </section>
+
+    <!-- ============ DIÁRIO ============ -->
+    <section id="diario" class="secao">
+      <h2 data-tpl="Diário {do} {bebe}">Diário do Matias</h2>
+      <p class="muted">Ultrassons, barrigão crescendo e nossos momentos — vamos atualizando até o grande dia.</p>
+      <div id="diario-lista" class="diario"></div>
+    </section>
+
+    <!-- ============ MURAL ============ -->
+    <section id="mural" class="secao">
+      <h2>Mural de carinho</h2>
+      <p class="muted" data-tpl="Mensagens de quem já está torcendo {pel} {bebe}.">Mensagens de quem já está torcendo pelo Matias.</p>
+      <div id="mural-lista" class="mural"></div>
+    </section>
+  </main>
+
+  <footer class="rodape">
+    <p>Feito com amor por <span id="rodape-assinatura">David, Vanessa e Matias</span> 💛</p>
+  </footer>
+
+  <!-- Barra fixa de seleção -->
+  <div id="barra-sel" class="barra-sel" hidden>
+    <div><strong id="sel-qtd">0</strong> <span id="sel-rotulo">número</span> · <span id="sel-total"></span>
+      <div class="sel-lista" id="sel-lista"></div>
+    </div>
+    <div class="barra-sel-acoes">
+      <button class="btn btn-link" id="sel-limpar" type="button">limpar</button>
+      <button class="btn btn-primario" id="sel-continuar" type="button">Continuar</button>
+    </div>
+  </div>
+
+  <!-- Modal de cadastro / pagamento -->
+  <dialog id="modal" class="modal">
+    <button class="modal-fechar" type="button" aria-label="Fechar" data-fechar>×</button>
+    <div id="modal-corpo"></div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

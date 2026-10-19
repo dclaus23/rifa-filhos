@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Painel da Rifa</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&family=Nunito+Sans:opsz,wght@6..12,400;6..12,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <style>
+    .adm { max-width: 1200px; margin: 0 auto; padding: 24px clamp(16px, 4vw, 40px) 80px; }
+    .adm-topo { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 24px; }
+    .card { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+    .card small { color: var(--muted); text-transform: uppercase; letter-spacing: .06em; font-size: .72rem; font-weight: 700; }
+    .card b { display: block; font-family: var(--serif); font-size: 1.5rem; }
+    .abas { display: flex; gap: 6px; border-bottom: 1px solid var(--line); margin-bottom: 18px; overflow-x: auto; }
+    .abas button { background: none; border: 0; padding: 10px 14px; font: 700 .95rem var(--sans); color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+    .abas button.ativa { color: var(--clay); border-color: var(--clay); }
+    .tabela-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; }
+    table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+    th { font-size: .75rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); background: var(--bg); position: sticky; top: 0; }
+    tr:last-child td { border-bottom: 0; }
+    .tag { display: inline-block; padding: 2px 9px; border-radius: 99px; font-size: .75rem; font-weight: 700; }
+    .tag.pago { background: var(--sage-soft); color: #4c6145; }
+    .tag.reservado { background: var(--clay-soft); color: var(--clay-dark); }
+    .acoes { display: flex; flex-wrap: wrap; gap: 6px; }
+    .acoes .btn { padding: 6px 12px; font-size: .8rem; }
+    .msg { color: var(--muted); max-width: 260px; font-size: .85rem; }
+    .barra-ferr { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 12px; }
+    .barra-ferr input, .barra-ferr select { padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; font: inherit; background: var(--surface); }
+    .form-cfg { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 4px 18px; max-width: 820px; }
+    .login { max-width: 380px; margin: 10vh auto; background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 28px; }
+    .lembrete-preview { white-space: pre-wrap; background: var(--bg); border: 1px dashed var(--line); border-radius: 12px; padding: 12px 14px; font-size: .9rem; margin: 10px 0 18px; max-width: 520px; }
+    .enviado { color: var(--sage); font-weight: 700; font-size: .85rem; }
+  </style>
+</head>
+<body>
+  <div id="faixa-demo" class="faixa-demo" hidden>Modo demonstração — dados de exemplo salvos só neste navegador. <button id="reset-demo" class="btn btn-link btn-pequeno" type="button">resetar demo</button></div>
+
+  <section id="tela-login" class="login" hidden>
+    <h2>Área dos pais</h2>
+    <p class="muted">Entre com o e-mail cadastrado no Supabase.</p>
+    <form id="form-login">
+      <label class="campo"><span>E-mail</span><input name="email" type="email" required autocomplete="username" /></label>
+      <label class="campo"><span>Senha</span><input name="senha" type="password" required autocomplete="current-password" /></label>
+      <p class="erro" id="login-erro"></p>
+      <button class="btn btn-primario" style="width:100%" type="submit">Entrar</button>
+    </form>
+  </section>
+
+  <main id="tela-painel" class="adm" hidden>
+    <div class="adm-topo">
+      <div>
+        <h1 style="font-size:2rem;margin:0">Painel da Rifa</h1>
+        <a href="index.html" class="muted">← ver o site</a>
+      </div>
+      <div class="acoes">
+        <button class="btn btn-fantasma btn-pequeno" id="btn-csv" type="button">Exportar CSV</button>
+        <button class="btn btn-link btn-pequeno" id="btn-sair" type="button">sair</button>
+      </div>
+    </div>
+
+    <div class="cards" id="cards"></div>
+
+    <nav class="abas">
+      <button data-aba="participantes" class="ativa" type="button">Participantes</button>
+      <button data-aba="lembretes" type="button">Lembretes da véspera</button>
+      <button data-aba="config" type="button">Configuração</button>
+    </nav>
+
+    <!-- Participantes -->
+    <section data-painel="participantes">
+      <div class="barra-ferr">
+        <input type="search" id="f-busca" placeholder="Buscar nome, celular ou nº" />
+        <select id="f-status">
+          <option value="">Todos</option>
+          <option value="reservado">Aguardando pagamento</option>
+          <option value="pago">Pagos</option>
+        </select>
+      </div>
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>Participante</th><th>Números</th><th>Valor</th><th>Status</th><th>Mensagem</th><th>Ações</th></tr></thead>
+          <tbody id="tb-participantes"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Lembretes -->
+    <section data-painel="lembretes" hidden>
+      <p class="muted" style="max-width:640px">
+        Na véspera do sorteio, cada participante com pagamento confirmado recebe uma mensagem.
+        Se a função automática (Supabase + WhatsApp API) estiver ligada, ela envia e marca como enviado sozinha.
+        Aqui você pode enviar manualmente, um clique por pessoa — o WhatsApp abre com a mensagem pronta.
+      </p>
+      <p><strong>Prévia da mensagem:</strong></p>
+      <div class="lembrete-preview" id="preview-lembrete"></div>
+      <div class="tabela-wrap">
+        <table>
+          <thead><tr><th>Participante</th><th>Números</th><th>Situação</th><th>Ação</th></tr></thead>
+          <tbody id="tb-lembretes"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Config -->
+    <section data-painel="config" hidden>
+      <form id="form-config" class="form-cfg">
+        <label class="campo"><span>Valor por número (R$)</span><input name="valorNumero" type="number" min="0" step="0.01" placeholder="em branco = a definir" /></label>
+        <label class="campo"><span>Quantidade de números</span><input name="totalNumeros" type="number" min="1" max="10000" required /></label>
+        <label class="campo"><span>Abertura da rifa</span><input name="dataAbertura" type="datetime-local" /></label>
+        <label class="campo"><span>Data e hora do sorteio</span><input name="dataSorteio" type="datetime-local" /></label>
+        <label class="campo"><span>Vendas até</span><input name="vendasAte" type="datetime-local" /></label>
+        <label class="campo" style="grid-column:1/-1"><span>Prêmio</span><input name="premio" maxlength="200" placeholder="ex.: Kit surpresa + R$ 300" /></label>
+        <label class="campo"><span>Número sorteado</span><input name="numeroSorteado" type="number" min="1" placeholder="preencha só depois do sorteio" /></label>
+        <div style="grid-column:1/-1">
+          <p class="erro" id="cfg-erro"></p>
+          <button class="btn btn-primario" type="submit">Salvar configuração</button>
+        </div>
+      </form>
+      <p class="muted" style="margin-top:18px;font-size:.88rem">Horários em horário de Brasília. Textos, fotos do diário e chave PIX ficam no arquivo <code>assets/js/config.js</code>.</p>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/admin.js"></script>
+</body>
+</html>

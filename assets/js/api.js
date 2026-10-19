@@ -40,6 +40,20 @@
         erro(error);
         return data;
       },
+      async getSorteios() {
+        const { data, error } = await sb.from("sorteios").select("*").order("realizado_em", { ascending: false });
+        if (error) return []; // migração 03 ainda não rodada
+        return data;
+      },
+      async sortear() {
+        const { data, error } = await sb.rpc("realizar_sorteio");
+        erro(error);
+        return data;
+      },
+      async anularSorteio(motivo) {
+        const { error } = await sb.rpc("anular_sorteio", { p_motivo: motivo });
+        erro(error);
+      },
       async getDiario() {
         const { data, error } = await sb.from("diario").select("*").order("data", { ascending: false });
         if (error) return CFG.diario; // tabela ainda não criada → usa o config.js
@@ -131,7 +145,6 @@
             data_sorteio: c.dataSorteio,
             vendas_ate: c.vendasAte,
             premio: c.premio,
-            numero_sorteado: c.numeroSorteado,
             ...(c.gestacaoDias != null ? { gestacao_data_ref: c.gestacaoDataRef, gestacao_dias: c.gestacaoDias } : {}),
             atualizado_em: new Date().toISOString(),
           })
@@ -176,12 +189,40 @@
 
     return {
       modo: "demo",
-      async getConfig() { await espera(); return { ...estado.config }; },
+      async getConfig() { await espera(); estado = ler(); return { ...estado.config }; },
       async getOcupados() {
-        await espera();
+        await espera(); estado = ler();
         return estado.participantes
           .map((p) => ({ numero: p.numero, status: p.status, primeiro_nome: primeiroNome(p.nome) }))
           .sort((a, b) => a.numero - b.numero);
+      },
+      async getSorteios() {
+        await espera(); estado = ler();
+        return [...(estado.sorteios || [])].sort((a, b) => b.realizado_em.localeCompare(a.realizado_em));
+      },
+      async sortear() {
+        estado.sorteios = estado.sorteios || [];
+        if (estado.sorteios.some((s) => !s.anulado)) throw new Error("O sorteio já foi realizado. Para refazer, é preciso anular o atual.");
+        const conc = estado.participantes.filter((p) => p.status === "pago").map((p) => p.numero).sort((a, b) => a - b);
+        if (!conc.length) throw new Error("Nenhum número com pagamento confirmado para sortear.");
+        const lim = Math.floor(2 ** 32 / conc.length) * conc.length;
+        let x; do { x = crypto.getRandomValues(new Uint32Array(1))[0]; } while (x >= lim);
+        const numero = conc[x % conc.length];
+        const dono = estado.participantes.find((p) => p.numero === numero);
+        const s = { id: crypto.randomUUID(), realizado_em: new Date().toISOString(), numero, primeiro_nome: primeiroNome(dono.nome),
+          concorrentes: conc, total_concorrentes: conc.length, anulado: false, motivo_anulacao: null, anulado_em: null };
+        estado.sorteios.push(s);
+        estado.config.numeroSorteado = numero;
+        salvar(estado);
+        return s;
+      },
+      async anularSorteio(motivo) {
+        const s = (estado.sorteios || []).find((x) => !x.anulado);
+        if (!s) throw new Error("Não há sorteio válido para anular.");
+        if (String(motivo || "").trim().length < 3) throw new Error("Informe o motivo da anulação.");
+        Object.assign(s, { anulado: true, motivo_anulacao: motivo.trim(), anulado_em: new Date().toISOString() });
+        estado.config.numeroSorteado = null;
+        salvar(estado);
       },
       async getDiario() {
         await espera();
@@ -229,7 +270,7 @@
       async login() {},
       async logout() {},
       async eAdmin() { return true; },
-      async listarParticipantes() { await espera(); return [...estado.participantes].sort((a, b) => a.numero - b.numero); },
+      async listarParticipantes() { await espera(); estado = ler(); return [...estado.participantes].sort((a, b) => a.numero - b.numero); },
       async marcarPago(ids, pago) {
         estado.participantes.forEach((p) => {
           if (ids.includes(p.id)) { p.status = pago ? "pago" : "reservado"; p.pago_em = pago ? new Date().toISOString() : null; }
@@ -241,7 +282,7 @@
         estado.participantes.forEach((p) => { if (ids.includes(p.id)) p.lembrete_enviado_em = new Date().toISOString(); });
         salvar(estado);
       },
-      async salvarConfig(c) { estado.config = { ...estado.config, ...c }; salvar(estado); },
+      async salvarConfig(c) { const { numeroSorteado, ...resto } = c; estado.config = { ...estado.config, ...resto }; salvar(estado); },
       resetarDemo() { try { localStorage.removeItem(KEY); } catch (_) {} estado = ler(); },
     };
   }

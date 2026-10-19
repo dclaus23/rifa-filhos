@@ -54,7 +54,7 @@
       v.hidden = false;
       v.innerHTML = `🎉 Número sorteado: <strong>${pad(c.numeroSorteado)}</strong>` +
         (dono && dono.status === "pago" ? ` — parabéns, <b>${U.esc(dono.primeiro_nome)}</b>!` : "") +
-        `<br><span class="muted">Obrigado a todos que fizeram parte. 💛</span>`;
+        `<br><span class="muted">Obrigado a todos que fizeram parte. 💛</span> <a href="sorteio.html">Ver o sorteio e o comprovante →</a>`;
     } else v.hidden = true;
   }
 
@@ -282,7 +282,7 @@
     if (c.dataSorteio) {
       const ds = new Date(c.dataSorteio);
       marcos.push({ data: new Date(ds.getTime() - 86400e3), titulo: "Lembrete no WhatsApp", texto: "Na véspera, todo mundo com número confirmado recebe uma mensagem avisando do sorteio." });
-      marcos.push({ data: ds, titulo: "Sorteio! 🍀", texto: `Às ${U.hora(ds)}. ${c.premio ? "Prêmio: " + c.premio + "." : "O prêmio será divulgado em breve."}`, destaque: true });
+      marcos.push({ data: ds, titulo: "Sorteio! 🍀", texto: `Às ${U.hora(ds)}, ao vivo na página do sorteio. ${c.premio ? "Prêmio: " + c.premio + "." : "O prêmio será divulgado em breve."}`, destaque: true, link: "sorteio.html" });
     }
     const g = U.gestacao();
     marcos.push({ data: g.dpp, titulo: U.txt("Chegada {do} {bebe} 👶"), texto: U.txt("A data prevista — mas quem decide é {ele}!"), aprox: true });
@@ -300,7 +300,7 @@
       return `<li class="${cls}">
         <div class="marco-data">${m.aprox ? "previsto · " : ""}${U.dataLonga(m.data)}</div>
         <h3>${U.esc(m.titulo)}${selo}</h3>
-        <p>${U.esc(m.texto || "")}</p></li>`;
+        <p>${U.esc(m.texto || "")}${m.link ? ` <a href="${m.link}">Abrir página do sorteio →</a>` : ""}</p></li>`;
     }).join("");
   }
 

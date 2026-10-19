@@ -19,12 +19,14 @@
 
   <header class="topo">
     <a href="#inicio" class="marca" data-tpl="Rifa {do} <em>{bebe}</em>">Rifa do <em>Matias</em></a>
-    <nav class="menu">
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="menu-principal"><span class="barras"><i></i><i></i><i></i></span>Menu</button>
+    <nav class="menu" id="menu-principal">
       <a href="#numeros">Números</a>
       <a href="#cronograma">Cronograma</a>
       <a href="#diario">Diário</a>
       <a href="#mural">Mural</a>
-      <a href="admin.html" id="link-pais" class="menu-pais">🔒 <span class="so-desktop">Área dos </span>pais</a>
+      <a href="sorteio.html">🎲 Sorteio</a>
+      <a href="admin.html" id="link-pais" class="menu-pais">🔒 Área dos pais</a>
     </nav>
   </header>
 
@@ -159,6 +161,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
   <script src="assets/js/config.js"></script>
   <script src="assets/js/api.js"></script>
+  <script src="assets/js/menu.js"></script>
   <script src="assets/js/app.js"></script>
 </body>
 </html>

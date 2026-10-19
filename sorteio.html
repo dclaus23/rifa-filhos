@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sorteio — Rifa do Matias</title>
+  <meta name="description" content="Acompanhe ao vivo o sorteio da Rifa do Matias." />
+  <meta property="og:title" content="Sorteio da Rifa do Matias 🎲" />
+  <meta property="og:description" content="Acompanhe ao vivo o sorteio e veja o comprovante." />
+  <meta property="og:image" content="imagens/familia.jpg" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎲</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=Nunito+Sans:opsz,wght@6..12,400;6..12,600;6..12,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+</head>
+<body class="pg-sorteio">
+  <div id="faixa-demo" class="faixa-demo" hidden>Modo demonstração — os dados ficam só neste navegador.</div>
+
+  <header class="topo">
+    <a href="index.html" class="marca" data-tpl="Rifa {do} <em>{bebe}</em>">Rifa do <em>Matias</em></a>
+    <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="menu-principal"><span class="barras"><i></i><i></i><i></i></span>Menu</button>
+    <nav class="menu" id="menu-principal">
+      <a href="index.html#numeros">Números</a>
+      <a href="index.html#cronograma">Cronograma</a>
+      <a href="index.html#diario">Diário</a>
+      <a href="index.html#mural">Mural</a>
+      <a href="sorteio.html" class="ativo" aria-current="page">🎲 Sorteio</a>
+      <a href="admin.html" class="menu-pais">🔒 Área dos pais</a>
+    </nav>
+  </header>
+
+  <main>
+    <!-- ============ PALCO ============ -->
+    <section class="palco" aria-live="polite">
+      <p class="palco-kicker" data-tpl="Sorteio da Rifa {do} {bebe}">Sorteio da Rifa do Matias</p>
+      <div class="bola" id="bola"><span id="bola-num">?</span></div>
+      <h1 class="palco-titulo" id="palco-titulo">Carregando…</h1>
+      <p class="palco-sub" id="palco-sub"></p>
+
+      <div class="contagem-num" id="sorteio-contagem" hidden>
+        <div><span id="sc-d">00</span><small>dias</small></div>
+        <div><span id="sc-h">00</span><small>horas</small></div>
+        <div><span id="sc-m">00</span><small>min</small></div>
+        <div><span id="sc-s">00</span><small>seg</small></div>
+      </div>
+
+      <button class="btn btn-fantasma btn-claro" id="btn-rever" type="button" hidden>▶ Rever o sorteio</button>
+
+      <!-- Controles dos pais -->
+      <div class="pais-box" id="pais-box" hidden>
+        <p><strong>🔒 Área dos pais</strong> — só vocês veem estes botões.</p>
+        <button class="btn btn-primario btn-grande" id="btn-sortear" type="button">🎲 Sortear agora</button>
+        <button class="btn btn-link btn-claro-link" id="btn-anular" type="button" hidden>anular sorteio</button>
+      </div>
+    </section>
+
+    <!-- ============ CONCORRENTES ============ -->
+    <section class="secao">
+      <h2 id="conc-titulo">Números concorrendo</h2>
+      <p class="muted" id="conc-sub">Só entram no sorteio os números com pagamento confirmado. Todos têm a mesma chance.</p>
+      <div class="chips chips-conc" id="conc-lista"></div>
+    </section>
+
+    <!-- ============ COMPROVANTE ============ -->
+    <section class="secao" id="comprovante-sec" hidden>
+      <h2>Comprovante</h2>
+      <div class="comprovante" id="comprovante"></div>
+      <div id="anulados"></div>
+    </section>
+
+    <!-- ============ COMO FUNCIONA ============ -->
+    <section class="secao">
+      <h2>Como o número é sorteado</h2>
+      <ol class="passos passos-3">
+        <li><span>1</span><h3>Quem concorre</h3><p>Todos os números com pagamento confirmado. Número só reservado não entra.</p></li>
+        <li><span>2</span><h3>Quem sorteia</h3><p>O servidor do site gera um número aleatório criptográfico. Ninguém escolhe o resultado, nem nós.</p></li>
+        <li><span>3</span><h3>Sem repetição</h3><p>Só existe um sorteio válido. Se precisar refazer, a anulação e o motivo ficam públicos aqui.</p></li>
+      </ol>
+    </section>
+  </main>
+
+  <footer class="rodape">
+    <p>Feito com amor por <span id="rodape-assinatura">David, Vanessa e Matias</span> 💛</p>
+  </footer>
+
+  <!-- Modal de confirmação -->
+  <dialog id="modal" class="modal">
+    <button class="modal-fechar" type="button" aria-label="Fechar" data-fechar>×</button>
+    <div id="modal-corpo"></div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/api.js"></script>
+  <script src="assets/js/menu.js"></script>
+  <script src="assets/js/sorteio.js"></script>
+</body>
+</html>

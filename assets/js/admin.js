@@ -143,7 +143,6 @@
     f.dataSorteio.value = paraInput(config.dataSorteio);
     f.vendasAte.value = paraInput(config.vendasAte);
     f.premio.value = config.premio ?? "";
-    f.numeroSorteado.value = config.numeroSorteado ?? "";
     const g = U.gestacao();
     const hoje = new Date(Date.now() - 3 * 3600e3).toISOString().slice(0, 10);
     f.gestSemanas.value = g.semanas;
@@ -160,8 +159,6 @@
     if (total < maiorUsado) return ($("#cfg-erro").textContent = `Já existe o número ${maiorUsado} reservado; não dá para reduzir abaixo disso.`);
     if (f.dataAbertura.value && f.vendasAte.value && f.dataAbertura.value >= f.vendasAte.value)
       return ($("#cfg-erro").textContent = "A abertura precisa ser antes do fim das vendas.");
-    const sorteado = f.numeroSorteado.value ? Number(f.numeroSorteado.value) : null;
-    if (sorteado && (sorteado < 1 || sorteado > total)) return ($("#cfg-erro").textContent = "Número sorteado fora da faixa.");
     try {
       await API.salvarConfig({
         valorNumero: f.valorNumero.value === "" ? null : Number(f.valorNumero.value),
@@ -170,7 +167,6 @@
         dataSorteio: deInput(f.dataSorteio.value),
         vendasAte: deInput(f.vendasAte.value),
         premio: f.premio.value.trim() || null,
-        numeroSorteado: sorteado,
         gestacaoDataRef: f.gestData.value,
         gestacaoDias: Number(f.gestSemanas.value) * 7 + Number(f.gestDias.value || 0),
       });

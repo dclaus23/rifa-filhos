@@ -33,7 +33,7 @@ window.RIFA_CONFIG = {
     totalNumeros: 200,
     dataAbertura: "2026-10-18T00:00:00-03:00",
     valorNumero: null,                         // null = "a definir"
-    dataSorteio: "2027-01-30T19:00:00-03:00",  // sábado (dia de Loteria Federal)
+    dataSorteio: "2027-01-30T19:00:00-03:00",
     vendasAte: "2027-01-29T12:00:00-03:00",
     premio: null,                              // ex.: "Um kit surpresa + R$ 300"
     numeroSorteado: null,
@@ -41,8 +41,9 @@ window.RIFA_CONFIG = {
 
   /* Como o número vencedor será definido (aparece no cronograma) */
   formaSorteio:
-    "O número vencedor sai pelo resultado da Loteria Federal do dia do sorteio " +
-    "(os últimos dígitos do 1º prêmio). Transmitimos tudo ao vivo no Instagram.",
+    "O sorteio é feito aqui no site, ao vivo, na página do sorteio. Concorrem todos os números " +
+    "com pagamento confirmado, com a mesma chance. O número é gerado pelo servidor de forma " +
+    "aleatória, só pode ser sorteado uma vez e o comprovante fica público.",
 
   pix: {
     chave: "13658007761",   // CPF (só números), e-mail, celular (+55...) ou chave aleatória

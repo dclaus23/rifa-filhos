@@ -398,8 +398,18 @@
     document.title = U.txt("Rifa {do} {bebe}");
   }
 
+  function renderSignificado() {
+    const s = CFG.familia.significado;
+    if (!s) return;
+    $("#significado").hidden = false;
+    $("#sig-resumo").textContent = `“${s.resumo}”`;
+    $("#sig-motivo").textContent = s.motivo || "";
+    $("#sig-origem").textContent = s.origem || "";
+  }
+
   async function iniciar() {
     aplicarTextos();
+    renderSignificado();
     if (API.modo === "demo") $("#faixa-demo").hidden = false;
     try {
       estado.config = await API.getConfig();

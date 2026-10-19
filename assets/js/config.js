@@ -25,6 +25,18 @@ window.RIFA_CONFIG = {
     ordem: 1,          // 1 = primeiro filho, 2 = segundo...
     genero: "m",       // "m" (do/pro/ele) ou "f" (da/pra/ela)
     assinatura: "David, Vanessa e Matias",
+
+    /* Por que escolhemos o nome (seção "Por que {bebe}?") */
+    significado: {
+      resumo: "Presente de Deus",
+      motivo:
+        "Escolhemos Matias pelo seu significado. Ele é exatamente isso para nós: " +
+        "um presente de Deus, esperado com muito amor.",
+      origem:
+        "Do grego Mathías, forma abreviada do hebraico Mattithyah (Matatias). " +
+        "Nome que passou a ser comumente empregado a partir da época dos macabeus, " +
+        "e que significa “Presente de Yahweh”.",
+    },
   },
 
   /* Valores usados no modo demo. Com o Supabase ligado, os valores

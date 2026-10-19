@@ -9,7 +9,7 @@
 
   const estado = {
     config: { ...CFG.rifa },
-    ocupados: new Map(), // numero -> {status, primeiro_nome}
+    ocupados: new Map(), // numero -> {status, primeiro_nome, nome_curto}
     selecionados: new Set(),
   };
 
@@ -53,7 +53,7 @@
       const dono = estado.ocupados.get(c.numeroSorteado);
       v.hidden = false;
       v.innerHTML = `🎉 Número sorteado: <strong>${pad(c.numeroSorteado)}</strong>` +
-        (dono && dono.status === "pago" ? ` — parabéns, <b>${U.esc(dono.primeiro_nome)}</b>!` : "") +
+        (dono && dono.status === "pago" ? ` — parabéns, <b>${U.esc(U.nomePublico(dono))}</b>!` : "") +
         `<br><span class="muted">Obrigado a todos que fizeram parte. 💛</span> <a href="sorteio.html">Ver o sorteio e o comprovante →</a>`;
     } else v.hidden = true;
   }
@@ -103,8 +103,10 @@
       if (oc) {
         b.disabled = true;
         b.classList.add(oc.status === "pago" ? "pago" : "res");
-        b.innerHTML += `<small>${U.esc(oc.primeiro_nome)}</small>`;
-        b.title = `${pad(n)} — ${oc.status === "pago" ? "confirmado" : "reservado"} por ${oc.primeiro_nome}`;
+        const nome = U.nomePublico(oc);
+        const [prim, ...resto] = nome.split(" ");
+        b.innerHTML += `<small>${U.esc(prim)}</small>` + (resto.length ? `<small>${U.esc(resto.join(" "))}</small>` : "");
+        b.title = `${pad(n)} — ${oc.status === "pago" ? "confirmado" : "reservado"} por ${nome}`;
         b.setAttribute("aria-label", b.title);
       } else {
         b.disabled = !aberto;
@@ -337,7 +339,7 @@
     try {
       const recados = await API.getMural();
       $("#mural-lista").innerHTML = recados.length
-        ? recados.map((r) => `<div class="recado"><p>${U.esc(r.mensagem)}</p><span>— ${U.esc(r.primeiro_nome)}</span></div>`).join("")
+        ? recados.map((r) => `<div class="recado"><p>${U.esc(r.mensagem)}</p><span>— ${U.esc(U.nomePublico(r))}</span></div>`).join("")
         : `<p class="vazio">Seja o primeiro a deixar um recado ${U.esc(U.txt("{pro} {bebe}"))}!</p>`;
     } catch (_) {
       $("#mural-lista").innerHTML = `<p class="vazio">Não foi possível carregar o mural agora.</p>`;

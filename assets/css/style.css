@@ -331,3 +331,8 @@ code { background: rgba(0,0,0,.06); padding: 1px 5px; border-radius: 4px; font-s
 .confete { position: fixed; inset: 0; pointer-events: none; z-index: 80; overflow: hidden; }
 .confete i { position: absolute; top: -20px; width: 9px; height: 14px; border-radius: 2px; animation: cai linear forwards; }
 @keyframes cai { to { transform: translateY(110vh) rotate(720deg); opacity: .9; } }
+.ganhador-contato { margin: 14px 0 4px; }
+.ganhador-contato p { color: #f8efe5; font-size: .92rem; }
+/* Grade: nome e sobrenome em duas linhas */
+.num small + small { margin-top: 1px; }
+.num small { line-height: 1.15; }

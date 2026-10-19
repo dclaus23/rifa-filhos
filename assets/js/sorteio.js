@@ -13,6 +13,7 @@
     config: { ...CFG.rifa },
     sorteios: [],
     pagos: [],          // números confirmados (antes do sorteio)
+    participantes: [],  // só para os pais (nome completo + celular do ganhador)
     admin: false,
     animando: false,
     idValidoMostrado: undefined,
@@ -38,7 +39,7 @@
     if (!estado.animando) $("#bola-num").textContent = s ? pad(s.numero) : "?";
     const cont = $("#sorteio-contagem");
     if (s) {
-      $("#palco-titulo").innerHTML = `Parabéns, <em>${U.esc(s.primeiro_nome || "")}</em>! 🎉`;
+      $("#palco-titulo").innerHTML = `Parabéns, <em>${U.esc(U.nomePublico(s))}</em>! 🎉`;
       $("#palco-sub").textContent = `Número ${pad(s.numero)} sorteado em ${U.dataLonga(s.realizado_em)}, às ${horaSeg(s.realizado_em)}, entre ${s.total_concorrentes} números confirmados.`;
       cont.hidden = true;
       $("#btn-rever").hidden = reduzirMov;
@@ -57,6 +58,14 @@
     $("#pais-box").hidden = !estado.admin;
     $("#btn-sortear").hidden = !!s;
     $("#btn-anular").hidden = !s;
+    const contato = $("#ganhador-contato");
+    const dono = s && estado.admin ? estado.participantes.find((p) => p.numero === s.numero) : null;
+    contato.hidden = !dono;
+    if (dono) {
+      const msg = `Oi, ${dono.nome.split(" ")[0]}! 🎉 Aqui é da ${U.txt("Rifa {do} {bebe}")}: o seu número ${pad(s.numero)} foi o sorteado! Parabéns e obrigado por fazer parte desse momento. 💛`;
+      contato.innerHTML = `<p>Ganhador(a), só vocês veem: <b>${U.esc(dono.nome)}</b> · ${U.formatarCelular(dono.celular)}</p>
+        <a class="btn btn-verde" target="_blank" rel="noopener" href="${U.linkWhatsApp(dono.celular, msg)}">Avisar no WhatsApp</a>`;
+    }
 
     // Concorrentes
     const lista = s ? s.concorrentes : estado.pagos;
@@ -88,7 +97,7 @@
     return `
       <dl class="comp-grid">
         <div><dt>Número sorteado</dt><dd class="comp-num">${pad(s.numero)}</dd></div>
-        <div><dt>Ganhador(a)</dt><dd>${U.esc(s.primeiro_nome || "—")}</dd></div>
+        <div><dt>Ganhador(a)</dt><dd>${U.esc(U.nomePublico(s) || "—")}${s.celular_final ? `<br><span class="muted">celular final ${U.esc(s.celular_final)}</span>` : ""}</dd></div>
         <div><dt>Data e hora</dt><dd>${U.dataLonga(s.realizado_em)}, ${horaSeg(s.realizado_em)}</dd></div>
         <div><dt>Concorrentes</dt><dd>${s.total_concorrentes} números confirmados</dd></div>
         <div><dt>Código do sorteio</dt><dd><code>${codigo}</code></dd></div>
@@ -171,6 +180,7 @@
     estado.config = cfg;
     estado.sorteios = sorteios;
     estado.pagos = ocupados.filter((o) => o.status === "pago").map((o) => o.numero).sort((a, b) => a - b);
+    if (estado.admin) estado.participantes = await API.listarParticipantes().catch(() => []);
   }
 
   /* Verifica de tempos em tempos: quem está assistindo vê a roleta
@@ -272,6 +282,7 @@
     try {
       const sessao = await API.sessao();
       estado.admin = !!sessao && (await API.eAdmin());
+      if (estado.admin) estado.participantes = await API.listarParticipantes().catch(() => []);
     } catch (_) {}
     render();
     contagem();

@@ -7,6 +7,16 @@
   const temSupabase = !!(CFG.supabase.url && CFG.supabase.anonKey && window.supabase);
 
   const primeiroNome = (nome) => String(nome || "").trim().split(/\s+/)[0] || "";
+  /* Mesma regra do banco (public.nome_curto): primeiro + último nome,
+     mantendo o sobrenome antes de Filho/Neto/Júnior... */
+  const SUFIXOS = ["filho", "filha", "neto", "neta", "junior", "júnior", "jr", "jr.", "sobrinho", "sobrinha", "segundo", "terceiro"];
+  const nomeCurto = (nome) => {
+    const a = String(nome || "").trim().split(/\s+/).filter(Boolean);
+    if (a.length <= 1) return a[0] || "";
+    const n = a.length;
+    if (n >= 3 && SUFIXOS.includes(a[n - 1].toLowerCase())) return `${a[0]} ${a[n - 2]} ${a[n - 1]}`;
+    return `${a[0]} ${a[n - 1]}`;
+  };
 
   /* ----------------------------- SUPABASE ---------------------------- */
   function criarApiSupabase() {
@@ -193,7 +203,7 @@
       async getOcupados() {
         await espera(); estado = ler();
         return estado.participantes
-          .map((p) => ({ numero: p.numero, status: p.status, primeiro_nome: primeiroNome(p.nome) }))
+          .map((p) => ({ numero: p.numero, status: p.status, primeiro_nome: primeiroNome(p.nome), nome_curto: nomeCurto(p.nome) }))
           .sort((a, b) => a.numero - b.numero);
       },
       async getSorteios() {
@@ -209,7 +219,7 @@
         let x; do { x = crypto.getRandomValues(new Uint32Array(1))[0]; } while (x >= lim);
         const numero = conc[x % conc.length];
         const dono = estado.participantes.find((p) => p.numero === numero);
-        const s = { id: crypto.randomUUID(), realizado_em: new Date().toISOString(), numero, primeiro_nome: primeiroNome(dono.nome),
+        const s = { id: crypto.randomUUID(), realizado_em: new Date().toISOString(), numero, primeiro_nome: primeiroNome(dono.nome), nome_curto: nomeCurto(dono.nome), celular_final: String(dono.celular).slice(-4),
           concorrentes: conc, total_concorrentes: conc.length, anulado: false, motivo_anulacao: null, anulado_em: null };
         estado.sorteios.push(s);
         estado.config.numeroSorteado = numero;
@@ -241,7 +251,7 @@
         const vistos = new Set();
         return estado.participantes
           .filter((p) => p.mensagem_publica && p.mensagem && !vistos.has(p.pedido_id) && vistos.add(p.pedido_id))
-          .map((p) => ({ primeiro_nome: primeiroNome(p.nome), mensagem: p.mensagem, criado_em: p.criado_em }))
+          .map((p) => ({ primeiro_nome: primeiroNome(p.nome), nome_curto: nomeCurto(p.nome), mensagem: p.mensagem, criado_em: p.criado_em }))
           .sort((a, b) => b.criado_em.localeCompare(a.criado_em));
       },
       async reservar({ numeros, nome, celular, mensagem, publica }) {
@@ -294,6 +304,10 @@
    Utilitários compartilhados (site e painel)
    ===================================================================== */
 window.RifaUtil = {
+  /* nome para exibição pública (usa o que veio do banco; senão o primeiro nome) */
+  nomePublico(o) {
+    return (o && (o.nome_curto || o.primeiro_nome)) || "";
+  },
   /* Textos com o nome/gênero/ordem do filho: {bebe} {do} {pro} {o} {ele} {dele} {pel}
      {ordinal} (primeiro/segunda...) {ordem} (1º/2ª) {pais} {assinatura} */
   txt(tpl) {
